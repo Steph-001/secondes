@@ -1,0 +1,55 @@
+{{ define "main" }}
+<div class="td-content">
+    <!-- Use Docsy's standard content wrapper class -->
+
+    {{/* ===================================================== */}} {{/* CRUCIAL:
+    Define the $unitPage variable (the parent) */}} {{/* Since vocab.md is a
+    direct child, .Parent should work */}} {{ $unitPage := .Parent }} {{/*
+    ===================================================== */}} {{/* --- Display
+    Logic --- */}} {{/* Check if we successfully identified the unit page */}} {{
+    if $unitPage }}
+    <h2>{{ $unitPage.Title }}</h2>
+
+    {{ .Content }} {{/* Render content from vocab.md if any */}} {{/* Check if the
+    identified unit page has lexicon data */}} {{ with $unitPage.Params.lexicon }}
+    {{ $sortedLexicon := sort . "term" }}
+
+    <dl class="lexicon-list">
+        {{ range $sortedLexicon }}
+        <dt id="{{ .term | anchorize }}">{{ .term }}</dt>
+        <dd>{{ .definition | markdownify }}</dd>
+        {{ end }}
+    </dl>
+    {{ else }} {{/* Clean message if no lexicon data found */}}
+    <p>No vocabulary for this unit yet.</p>
+    {{ end }} {{/* Link back to the unit page */}}
+    <p>
+        <a href="{{ $unitPage.RelPermalink }}">Return to {{ $unitPage.Title }}</a>
+    </p>
+
+    {{ else }} {{/* Fallback message if parent page couldn't be determined */}}
+    <h1>Lexicon</h1>
+    <p>Error: Could not determine the parent unit page.</p>
+    {{ .Content }} {{/* Still render vocab.md content if any */}} {{ end }}
+</div>
+<!-- Close td-content -->
+{{ end }} {{/* --- Define other blocks needed by baseof.html as empty --- */}}
+{{ define "styles" }} {{/* Add custom styles here if needed, e.g., for
+.lexicon-list */}}
+<style>
+    .lexicon-list dt {
+        font-weight: bold;
+        margin-top: 1em;
+    }
+
+    .lexicon-list dd {
+        margin-left: 2em;
+        margin-bottom: 1em;
+    }
+</style>
+{{ end }} {{ define "toc" }}{{/* Leave empty if vocab page doesn't need TOC
+*/}}{{ end }} {{ define "previous_next_buttons" }}{{/* Leave empty */}}{{ end }}
+{{ define "edit_page_button" }}{{/* Leave empty */}}{{ end }} {{ define
+"page_contribution_button" }}{{/* Leave empty */}}{{ end }} {{ define
+"print_page_button" }}{{/* Leave empty */}}{{ end }} {{ define
+"fork_page_button" }}{{/* Leave empty */}}{{ end }}

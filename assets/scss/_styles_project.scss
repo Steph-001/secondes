@@ -1,0 +1,143 @@
+// Add space between logo and title
+.navbar-brand__logo {
+  // Add !important to the properties you want to force
+  margin-right: 0.75rem !important;
+}
+
+// assets/scss/_styles_project.scss
+
+.td-footer {
+  // -- Force Padding --
+  // Make sure both top and bottom are overridden
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+
+  // -- Force Height Reset --
+  // Override any min-height or height that might be active
+  min-height: auto !important;
+  height: auto !important;
+
+  // -- Fix Vertical Alignment (Crucial) --
+  // Re-establish flex properties for centering
+  display: flex !important; // Ensure it uses flexbox
+  align-items: center !important; // Vertically center the content
+  // You might also need justify-content if horizontal alignment is off
+  // justify-content: center !important; // Horizontally center (if needed)
+
+  // -- Reduce Inner Element Spacing --
+  // Target paragraphs inside the footer directly
+  p {
+    margin-top: 0.25rem !important; // Reduce space above paragraphs significantly
+    margin-bottom: 0.25rem !important; // Reduce space below paragraphs significantly
+  }
+
+  // Add rules for other elements inside if needed (e.g., lists, divs)
+  // ul, div { margin: 0 !important; }
+}
+
+// Optional: Control logo image size via CSS
+// .navbar-brand__logo img {
+//   height: 35px !important; // Example height
+//   width: auto !important; // Keep aspect ratio
+// }
+
+// ==========================================================================
+// Project Specific Gallery Styling
+// ==========================================================================
+
+.gallery-container {
+  display: flex;
+  flex-wrap: wrap;
+  // justify-content is set via inline style from the shortcode based on 'align' param
+  gap: 1rem; // Spacing between items - ADJUST AS NEEDED
+  padding: 1rem 0; // Optional padding for the container
+  margin-bottom: 1.5rem; // Spacing below the gallery
+}
+
+.gallery-item {
+  // Flex items grow/shrink based on img max-width rules below
+  // Add styles here if needed for the item wrapper itself
+}
+
+.gallery-item img {
+  display: block; // Prevent extra space below image
+  width: 100%; // Image tries to fill its flex item container
+  height: auto; // Maintain aspect ratio
+  // max-width rules below control the number of columns
+  border-radius: 8px; // Your styling
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); // Your styling
+  transition: transform 0.2s ease-in-out; // Your styling
+  // Inline style max-width from shortcode PARAMETER acts as a ceiling
+}
+
+.gallery-item img:hover {
+  transform: scale(1.03); // Your styling
+}
+
+// --- Responsive Columns for Gallery ---
+
+// Mobile: One image per row (effectively)
+@media (max-width: 767px) {
+  .gallery-container {
+    padding: 1rem; // Example: Add padding on mobile
+  }
+
+  .gallery-item img {
+    // Takes full width, respecting container padding & gap
+    max-width: 100%;
+  }
+}
+
+// Tablet (768px to 1023px): ~Two images per row
+@media (min-width: 768px) and (max-width: 1023px) {
+  .gallery-item img {
+    max-width: 48%; // Adjust percentage slightly for gap
+  }
+}
+
+// Desktop (1024px to 1279px): ~Three images per row
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .gallery-item img {
+    max-width: 30%; // Adjust percentage slightly for gap
+  }
+}
+
+// Larger Desktop (1280px and above): ~Four images per row
+@media (min-width: 1280px) {
+  .gallery-item img {
+    max-width: 23%; // Adjust percentage slightly for gap
+  }
+}
+
+// --- End Gallery Styling ---
+// Audio Player
+
+.audio-player-wrapper {
+  margin-bottom: 1rem; // Add some space below the player
+  max-width: 100%; // Ensure it doesn't overflow its container
+
+  audio {
+    vertical-align: middle; // Helps with inline alignment issues if they occur
+  }
+}
+
+// Alignment Helpers
+// These rely on the wrapper having a defined width (which it gets from the 'width' parameter)
+.audio-left {
+  margin-right: auto; // Pushes others away, effectively left-aligning
+  margin-left: 0;
+}
+
+.audio-center {
+  margin-left: auto;
+  margin-right: auto; // Centers the block element
+}
+
+.audio-right {
+  margin-left: auto; // Pushes itself to the right
+  margin-right: 0;
+}
+// --- End Audio Player ---
+.text-justify {
+  text-align: justify !important;
+}

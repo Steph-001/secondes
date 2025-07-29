@@ -1,0 +1,58 @@
+{{/* layouts/shortcodes/responsive-image.html - Page Bundle Aware - Fix warnf */}}
+{{/*
+  Displays a responsive, centered or left-aligned image with optional alt text,
+  rounded corners, and an optional maximum width. Uses Page Bundles.
+  Parameters:
+    src (required): Filename of the image within the Page Bundle (e.g., "my-pic.jpg").
+    alt (optional): Alt text for the image (defaults to title or filename).
+    max_width (optional): Maximum width (e.g., "600px", "75%"). Defaults to 100%.
+    align (optional): Horizontal alignment ("center" or "left"). Defaults to "center".
+    title (optional): Title attribute for the image.
+  Usage examples:
+    {{< responsive-image src="photo.jpg" alt="My Photo" >}} (Centered by default)
+    {{< responsive-image src="diagram.png" alt="Diagram" align="left" max_width="500px" >}}
+*/}}
+
+{{ $srcParam := .Get "src" }}
+{{ $alt := .Get "alt" }} {{/* Get alt, default later */}}
+{{ $title := .Get "title" | default "" }}
+{{ $align := .Get "align" | default "center" }}
+{{ $maxWidthParam := .Get "max_width" | default "100%" }}
+{{ $imgSrc := "" }}
+{{ $image := "" }}
+
+{{/* Try to find the image resource within the page bundle */}}
+{{ with $srcParam }}
+  {{ $image = $.Page.Resources.GetMatch . }}
+{{ end }}
+
+{{ if $image }}
+  {{ $imgSrc = $image.RelPermalink }}
+  {{/* Default alt to title if provided, else filename */}}
+  {{ $alt = $alt | default ($title | default $image.Name) }}
+{{ else if $srcParam }}
+  {{/* --- CORRECTED WARNF LINE --- */}}
+  {{ warnf `responsive-image shortcode: Could not find '%s' in Page Resources for '%s'. Falling back to using '%s' with relURL.` $srcParam $.Page.File.Path $srcParam }}
+  {{ $imgSrc = $srcParam | relURL }}
+  {{/* Default alt to title if provided, else src param */}}
+  {{ $alt = $alt | default ($title | default $srcParam) }}
+{{ end }}
+
+{{/* Basic check if we ended up with a source */}}
+{{ if $imgSrc }}
+  {{ $classStr := "img-fluid rounded d-block mb-3" }}
+  {{ if eq $align "center" }}
+    {{ $classStr = printf "%s %s" $classStr "mx-auto" }}
+  {{ end }}
+  <img src="{{ $imgSrc }}"
+       alt="{{ $alt }}"
+       class="{{ $classStr }}"
+       {{ with $title }} title="{{ . }}" {{ end }}
+       {{ with $maxWidthParam }} style="max-width: {{ . }};" {{ end }}
+       loading="lazy"
+  />
+{{ else }}
+  <div class="alert alert-danger" role="alert">
+    responsive-image Shortcode Error: Could not determine image source for '{{ $srcParam | default "(not provided)" }}'. Check filename and if it exists in the Page Bundle.
+  </div>
+{{ end }}

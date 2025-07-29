@@ -1,0 +1,646 @@
+<style>
+    .login-container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+        margin: 20px auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .login-container .logo {
+        font-size: 3em;
+        margin-bottom: 20px;
+    }
+    
+    .login-container h1 {
+        color: #2d3748;
+        margin-bottom: 10px;
+        font-size: 2em;
+    }
+    
+    .login-container .subtitle {
+        color: #718096;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+        line-height: 1.5;
+    }
+    
+    .login-container .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    
+    .login-container label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2d3748;
+    }
+    
+    .login-container input[type="email"], .login-container input[type="password"] {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: all 0.3s;
+        background: #f7fafc;
+        box-sizing: border-box;
+    }
+    
+    .login-container input[type="email"]:focus, .login-container input[type="password"]:focus {
+        outline: none;
+        border-color: #4299e1;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+    
+    .login-container .btn {
+        background: linear-gradient(135deg, #4299e1, #3182ce);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s;
+        margin: 10px 0;
+    }
+    
+    .login-container .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    
+    .login-container .btn:disabled {
+        background: #a0aec0;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .login-container .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .login-container .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+    
+    .login-container .btn-link {
+        background: none;
+        color: #4299e1;
+        border: none;
+        padding: 8px 0;
+        font-weight: 500;
+        text-decoration: underline;
+        cursor: pointer;
+        width: auto;
+        margin: 5px 10px;
+    }
+    
+    .login-container .btn-link:hover {
+        color: #3182ce;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .login-container .alert {
+        padding: 15px;
+        border-radius: 10px;
+        margin: 20px 0;
+        font-weight: 500;
+    }
+    
+    .login-container .alert-success {
+        background: #c6f6d5;
+        border: 1px solid #9ae6b4;
+        color: #22543d;
+    }
+    
+    .login-container .alert-error {
+        background: #fed7d7;
+        border: 1px solid #feb2b2;
+        color: #742a2a;
+    }
+    
+    .login-container .alert-info {
+        background: #bee3f8;
+        border: 1px solid #90cdf4;
+        color: #2c5282;
+    }
+    
+    .login-container .hidden {
+        display: none;
+    }
+    
+    .login-container .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .login-container .form-actions-center {
+        justify-content: center;
+    }
+    
+    .login-container .logged-in-state {
+        text-align: center;
+    }
+    
+    .login-container .logged-in-state .welcome-msg {
+        color: #22543d;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    
+    .login-container .button-container {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+</style>
+
+<div class="login-container">
+    <!-- Auth Status -->
+    <div id="auth-status">
+        <div class="logo">🔐</div>
+        <h1>Login</h1>
+        <p class="subtitle" id="auth-message">Please log in to sync your progress</p>
+    </div>
+    
+    <!-- Login/Signup Forms -->
+    <div id="auth-forms">
+        <!-- Login Form -->
+        <div id="login-form">
+            <div id="login-alert-container"></div>
+            
+            <form id="login-form-element">
+                <div class="form-group">
+                    <label for="login-email">Email Address:</label>
+                    <input type="email" id="login-email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn" id="login-submit">Login</button>
+            </form>
+            
+            <div class="form-actions form-actions-center">
+                <button id="show-signup" class="btn-link">Need an account? Sign up</button>
+                <button id="forgot-password" class="btn-link">Forgot password?</button>
+            </div>
+        </div>
+        
+        <!-- Signup Form -->
+        <div id="signup-form" class="hidden">
+            <div class="logo">👤</div>
+            <h1>Sign Up</h1>
+            <p class="subtitle">Create your account to get started</p>
+            
+            <div id="signup-alert-container"></div>
+            
+            <form id="signup-form-element">
+                <div class="form-group">
+                    <label for="signup-email">Email Address:</label>
+                    <input type="email" id="signup-email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password:</label>
+                    <input type="password" id="signup-password" required>
+                </div>
+                <button type="submit" class="btn" id="signup-submit">Sign Up</button>
+            </form>
+            
+            <div class="form-actions form-actions-center">
+                <button id="show-login" class="btn-link">Already have an account? Login</button>
+            </div>
+        </div>
+        
+        <!-- Forgot Password Form -->
+        <div id="forgot-password-form" class="hidden">
+            <div class="logo">🔑</div>
+            <h1>Reset Password</h1>
+            <p class="subtitle">Enter your email to receive a password reset link</p>
+            
+            <div id="reset-alert-container"></div>
+            
+            <form id="reset-form-element">
+                <div class="form-group">
+                    <label for="reset-email">Email Address:</label>
+                    <input type="email" id="reset-email" required placeholder="your@email.com">
+                </div>
+                <button type="submit" class="btn" id="reset-submit">Send Reset Email</button>
+            </form>
+            
+            <div class="form-actions form-actions-center">
+                <button id="back-to-login" class="btn-link">Back to login</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+// Wait for DOM and Supabase to be ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize Supabase client
+  let supabaseClient;
+  
+  try {
+    // Check if supabase is loaded
+    if (typeof supabase === 'undefined') {
+      throw new Error('Supabase library not loaded');
+    }
+
+    const { createClient } = supabase;
+    supabaseClient = createClient(
+      'https://xjurrqzjvhzjweufgivl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqdXJycXpqdmh6andldWZnaXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NDUzMTIsImV4cCI6MjA2NDUyMTMxMn0.rimZk-g9-RmvQCbQJ5Phk0lKwOue6pPlgibO-LKHqmM'
+    );
+
+    console.log("Supabase client initialized:", supabaseClient);
+  } catch (error) {
+    console.error('Failed to initialize Supabase:', error);
+    showAlert('login-alert-container', 'Error: Authentication service not available', 'error');
+    return;
+  }
+
+  // DOM elements
+  const authMessage = document.getElementById('auth-message');
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  const forgotPasswordForm = document.getElementById('forgot-password-form');
+  const authForms = document.getElementById('auth-forms');
+  
+  // Form switching
+  document.getElementById('show-signup').addEventListener('click', function(e) {
+    e.preventDefault();
+    showSignupForm();
+  });
+  
+  document.getElementById('show-login').addEventListener('click', function(e) {
+    e.preventDefault();
+    showLoginForm();
+  });
+  
+  document.getElementById('forgot-password').addEventListener('click', function(e) {
+    e.preventDefault();
+    showForgotPasswordForm();
+  });
+  
+  document.getElementById('back-to-login').addEventListener('click', function(e) {
+    e.preventDefault();
+    showLoginForm();
+  });
+  
+  function showLoginForm() {
+    loginForm.classList.remove('hidden');
+    signupForm.classList.add('hidden');
+    forgotPasswordForm.classList.add('hidden');
+    document.querySelector('.logo').textContent = '🔐';
+    document.querySelector('h1').textContent = '';
+    document.querySelector('.subtitle').textContent = 'Please log in to sync your progress';
+  }
+  
+  function showSignupForm() {
+    loginForm.classList.add('hidden');
+    signupForm.classList.remove('hidden');
+    forgotPasswordForm.classList.add('hidden');
+  }
+  
+  function showForgotPasswordForm() {
+    loginForm.classList.add('hidden');
+    signupForm.classList.add('hidden');
+    forgotPasswordForm.classList.remove('hidden');
+  }
+  
+  // Handle login
+  document.getElementById('login-form-element').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const submitBtn = document.getElementById('login-submit');
+    
+    if (!email || !password) {
+      showAlert('login-alert-container', 'Please enter both email and password', 'error');
+      return;
+    }
+    
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
+      
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      
+      if (error) {
+        console.error('Login error:', error);
+        showAlert('login-alert-container', `Login failed: ${error.message}`, 'error');
+        return;
+      }
+      
+      console.log('Login successful:', data);
+      
+      showAlert('login-alert-container', 'Login successful! Redirecting...', 'success');
+      
+      // Redirect back to previous page or home
+      setTimeout(() => {
+        const redirectUrl = document.referrer || '/';
+        window.location.href = redirectUrl;
+      }, 1500);
+      
+    } catch (err) {
+      console.error('Login exception:', err);
+      showAlert('login-alert-container', 'Login failed. Please try again.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Login';
+    }
+  });
+  
+  // Handle signup
+  document.getElementById('signup-form-element').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const submitBtn = document.getElementById('signup-submit');
+    
+    if (!email || !password) {
+      showAlert('signup-alert-container', 'Please enter both email and password', 'error');
+      return;
+    }
+    
+    if (password.length < 6) {
+      showAlert('signup-alert-container', 'Password must be at least 6 characters', 'error');
+      return;
+    }
+    
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+      
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          emailRedirectTo: window.location.origin + '/login/'
+        }
+      });
+      
+      if (error) {
+        console.error('Signup error:', error);
+        let errorMessage = error.message;
+        
+        // Provide more specific error messages
+        if (error.message.includes('User already registered')) {
+          errorMessage = 'An account with this email already exists. Please try logging in instead.';
+        } else if (error.message.includes('Invalid email')) {
+          errorMessage = 'Please enter a valid email address.';
+        } else if (error.message.includes('Password')) {
+          errorMessage = 'Password must be at least 6 characters long.';
+        }
+        
+        showAlert('signup-alert-container', `Signup failed: ${errorMessage}`, 'error');
+        return;
+      }
+      
+      console.log('Signup successful:', data);
+      
+      if (data.user && !data.session) {
+        // Email confirmation required
+        showAlert('signup-alert-container', 'Signup successful! Please check your email for confirmation.', 'success');
+      } else if (data.user && data.session) {
+        // Auto-login after signup (email confirmation disabled)
+        showAlert('signup-alert-container', 'Account created! Redirecting...', 'success');
+        
+        setTimeout(() => {
+          const redirectUrl = document.referrer || '/';
+          window.location.href = redirectUrl;
+        }, 1500);
+      } else {
+        showAlert('signup-alert-container', 'Signup completed, but there was an issue. Please try logging in.', 'error');
+      }
+      
+    } catch (err) {
+      console.error('Signup exception:', err);
+      showAlert('signup-alert-container', 'Signup failed. Please try again.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign Up';
+    }
+  });
+  
+  // Handle password reset
+  document.getElementById('reset-form-element').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('reset-email').value.trim();
+    const submitBtn = document.getElementById('reset-submit');
+    
+    if (!email) {
+      showAlert('reset-alert-container', 'Please enter your email address', 'error');
+      return;
+    }
+    
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/password-reset/'
+      });
+      
+      if (error) {
+        console.error('Password reset error:', error);
+        let errorMessage = error.message;
+        
+        // Provide more specific error messages
+        if (error.message.includes('User not found')) {
+          errorMessage = 'No account found with this email address.';
+        } else if (error.message.includes('Invalid email')) {
+          errorMessage = 'Please enter a valid email address.';
+        }
+        
+        showAlert('reset-alert-container', `Reset failed: ${errorMessage}`, 'error');
+        return;
+      }
+      
+      showAlert('reset-alert-container', 'Password reset email sent! Check your inbox and follow the link to reset your password.', 'success');
+      
+      // Clear the form and go back to login after a delay
+      setTimeout(() => {
+        document.getElementById('reset-email').value = '';
+        showLoginForm();
+      }, 3000);
+      
+    } catch (err) {
+      console.error('Password reset exception:', err);
+      showAlert('reset-alert-container', 'Reset failed. Please try again.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Reset Email';
+    }
+  });
+  
+  // Add this check to prevent cached login states
+  async function checkAuth() {
+    try {
+        // Force a fresh session check by clearing any cached session first
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        
+        if (error) {
+            console.error('Auth check error:', error);
+            // If there's an auth error, clear everything and show logged out
+            localStorage.clear();
+            showLoggedOutState();
+            return;
+        }
+        
+        console.log('Current session:', session);
+        
+        if (session && session.user) {
+            // Double-check the session is actually valid by trying to get user
+            const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+            if (userError || !user) {
+                console.log('Session invalid, clearing...');
+                localStorage.clear();
+                showLoggedOutState();
+                return;
+            }
+            showLoggedInState(session.user);
+        } else {
+            showLoggedOutState();
+        }
+    } catch (err) {
+        console.error('Auth check exception:', err);
+        localStorage.clear();
+        showLoggedOutState();
+    }
+  }
+  
+  // Show logged in state
+  function showLoggedInState(user) {
+    const authStatus = document.getElementById('auth-status');
+    authStatus.innerHTML = `
+      <div class="logged-in-state">
+        <div class="logo">✅</div>
+        <h1>Welcome Back!</h1>
+        <p class="welcome-msg">Hello, ${user.email}</p>
+        <div class="button-container">
+          <button class="btn" onclick="goToContinue()">Continue to Site</button>
+          <button class="btn btn-secondary" onclick="handleLogout()">Logout</button>
+        </div>
+      </div>
+    `;
+    
+    authForms.style.display = 'none';
+    console.log('Showing logged in state for:', user.email);
+  }
+  
+  // Show logged out state
+  function showLoggedOutState() {
+    authMessage.textContent = 'Please log in to sync your progress';
+    authForms.style.display = 'block';
+    showLoginForm();
+    console.log('Showing logged out state');
+  }
+  
+  // Global functions for buttons
+  window.goToContinue = function() {
+    window.location.href = '/';
+  };
+  
+  window.handleLogout = async function() {
+    console.log('Force logging out...');
+    
+    try {
+        // Step 1: Try normal logout first
+        await supabaseClient.auth.signOut();
+        
+        // Step 2: Force clear ALL storage (not just auth-related)
+        // This is necessary because Supabase free plan doesn't properly invalidate sessions
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Step 3: Clear any cookies that might be storing auth data
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        // Step 4: Force reload the page to clear any in-memory auth state
+        window.location.reload();
+        
+    } catch (err) {
+        console.error('Logout error:', err);
+        // Even if logout fails, force clear everything
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload();
+    }
+  };
+  
+  
+  
+  
+  
+
+  function showAlert(containerId, message, type) {
+    const alertContainer = document.getElementById(containerId);
+    if (alertContainer) {
+      alertContainer.innerHTML = `
+        <div class="alert alert-${type}">
+          ${message}
+        </div>
+      `;
+    }
+  }
+  
+  // Add this to prevent stale auth states
+  // Clear any potentially stale auth data on page load
+  window.addEventListener('focus', function() {
+    // When user switches back to this tab, recheck auth
+    checkAuth();
+  });
+
+  // Also add this to detect storage changes from other tabs
+  window.addEventListener('storage', function(e) {
+    if (e.key && e.key.includes('supabase')) {
+        // Auth state changed in another tab, recheck
+        setTimeout(checkAuth, 100);
+    }
+  });
+
+  // Check auth status
+  checkAuth();
+  
+  // Listen for auth state changes
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    console.log('Auth state changed:', event, session);
+    if (event === 'SIGNED_IN' && session) {
+      console.log('User signed in');
+      showLoggedInState(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      console.log('User signed out');
+      showLoggedOutState();
+    }
+  });
+});
+</script>

@@ -1,0 +1,203 @@
+{{/* layouts/shortcodes/gallery.html - Flexbox Layout with Fullscreen Modal */}}
+{{/*
+Displays a responsive image gallery (flexbox layout) from a 'gallery' subfolder.
+Each image opens in a fullscreen modal overlay when clicked.
+
+Parameters:
+max_width (optional): Max width for EACH INLINE image (e.g., "150px").
+align (optional): Horizontal alignment of items within gallery rows ("center" or "left"). Defaults to "center".
+link (optional): Wraps image in link (primarily useful for right-click/new tab). Defaults to false.
+
+Usage examples:
+{{< gallery >}}
+{{< gallery max_width="120px" >}}
+{{< gallery max_width="200px" align="left" >}}
+{{< gallery link="true" >}}
+*/}}
+
+{{ $maxWidth := .Get "max_width" }}
+{{ $align := .Get "align" | default "center" }}
+{{ $linkImages := eq (.Get "link" | default "false") "true" }}
+
+{{ $images := .Page.Resources.Match "gallery/*" }}
+{{ $images = where $images "ResourceType" "image" }}
+
+{{ if $images }}
+  {{ $justifyContent := "center" }}
+  {{ if eq $align "left" }}
+    {{ $justifyContent = "flex-start" }}
+  {{ end }}
+  {{ $galleryID := printf "gallery-%s" (substr .Page.File.UniqueID 0 8) }}
+
+  <style>
+    #{{ $galleryID }} .gallery-container-inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem 0;
+      margin-bottom: 1.5rem;
+      justify-content: {{ $justifyContent }};
+    }
+
+    #{{ $galleryID }} .gallery-item img.gallery-modal-trigger {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      cursor: zoom-in;
+    }
+
+    #{{ $galleryID }} .gallery-item img.gallery-modal-trigger:hover,
+    #{{ $galleryID }} .gallery-item img.gallery-modal-trigger:focus {
+      transform: scale(1.03);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      outline: 2px solid dodgerblue;
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 767px) {
+      #{{ $galleryID }} .gallery-container-inner {
+        padding: 1rem;
+      }
+
+      #{{ $galleryID }} .gallery-item img.gallery-modal-trigger {
+        max-width: 100%;
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+      #{{ $galleryID }} .gallery-item img.gallery-modal-trigger {
+        max-width: 48%;
+      }
+    }
+
+    @media (min-width: 1024px) and (max-width: 1279px) {
+      #{{ $galleryID }} .gallery-item img.gallery-modal-trigger {
+        max-width: 30%;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      #{{ $galleryID }} .gallery-item img.gallery-modal-trigger {
+        max-width: 23%;
+      }
+    }
+  </style>
+
+  <div id="{{ $galleryID }}" class="gallery-wrapper">
+    <div class="gallery-container-inner">
+      {{ range $images }}
+        {{ $image := . }}
+        {{ $altText := $image.Title | default (printf "Gallery image: %s" $image.Name) }}
+        {{ $imgTitle := $image.Title | default "Click to enlarge" }}
+
+        <div class="gallery-item">
+          {{ if $linkImages }}
+            <a href="{{ $image.RelPermalink }}" title="View full image: {{ $altText }}" target="_blank">
+          {{ end }}
+
+          <img
+            src="{{ $image.RelPermalink }}"
+            alt="{{ $altText }}"
+            title="{{ $imgTitle }}"
+            class="gallery-modal-trigger"
+            loading="lazy"
+            tabindex="0"
+            role="button"
+            aria-label="Enlarge image: {{ $altText }}"
+            {{ with $maxWidth }}style="max-width: {{ . }};"{{ end }}
+          />
+
+          {{ if $linkImages }}
+            </a>
+          {{ end }}
+        </div>
+      {{ end }}
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const galleryElement = document.getElementById("{{ $galleryID }}");
+
+      if (galleryElement) {
+        function openImageModal(imgElement) {
+          if (document.querySelector('.fullscreen-modal-overlay')) return;
+
+          const overlay = document.createElement('div');
+          overlay.className = 'fullscreen-modal-overlay';
+          overlay.style.cssText = `
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1055; cursor: pointer;
+          `;
+          overlay.setAttribute('role', 'dialog');
+          overlay.setAttribute('aria-modal', 'true');
+          overlay.setAttribute('aria-label', 'Image viewer - Click outside or press Escape to close');
+
+          const modalImg = document.createElement('img');
+          modalImg.src = imgElement.src;
+          modalImg.alt = imgElement.alt;
+          modalImg.style.cssText = `
+            max-width: 90vw; max-height: 90vh;
+            object-fit: contain; display: block;
+            cursor: default;
+          `;
+
+          let originalFocusElement = document.activeElement === imgElement ? imgElement : null;
+
+          const closeViewer = () => {
+            if (document.body.contains(overlay)) {
+              document.body.removeChild(overlay);
+            }
+            document.removeEventListener('keydown', handleEscKey);
+            if (originalFocusElement && document.body.contains(originalFocusElement)) {
+              originalFocusElement.focus();
+            } else if (document.body.contains(imgElement)) {
+              imgElement.focus();
+            }
+          };
+
+          overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) closeViewer();
+          });
+
+          const handleEscKey = (event) => {
+            if (event.key === 'Escape') closeViewer();
+          };
+          document.addEventListener('keydown', handleEscKey);
+
+          overlay.appendChild(modalImg);
+          document.body.appendChild(overlay);
+        }
+
+        galleryElement.addEventListener('click', function (event) {
+          const clickedImage = event.target.closest('img.gallery-modal-trigger');
+          if (clickedImage && galleryElement.contains(clickedImage)) {
+            if (event.target.closest('a')) event.preventDefault();
+            openImageModal(clickedImage);
+          }
+        });
+
+        galleryElement.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            const focusedImage = event.target.closest('img.gallery-modal-trigger');
+            if (focusedImage && galleryElement.contains(focusedImage)) {
+              event.preventDefault();
+              openImageModal(focusedImage);
+            }
+          }
+        });
+      }
+    })();
+  </script>
+
+{{ else }}
+  <div class="alert alert-warning" role="alert">
+    Gallery Shortcode: No images found in the 'gallery' subfolder of this page bundle.
+  </div>
+{{ end }}
