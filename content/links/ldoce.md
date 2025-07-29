@@ -9,7 +9,7 @@ manualLinkTarget: "_blank" # Optional: Open in new tab
 
 # --- Hugo build options ---  
 toc_hide: false # Hide from on-page Table of Contents  
-_build:  
+build:  
   render: never # Never render this file as its own HTML page  
   list: never # Don't show it in list pages for this section  
 ---
