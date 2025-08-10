@@ -1,0 +1,79 @@
+baseURL: "https://secondes.stephanejacquet.fr" # Change to your actual base URL
+languageCode: "en-us"
+title: "Secondes" # Change to your site title
+# theme: "docsy"  # <--- REMOVE or COMMENT OUT this line
+
+outputs: # Top-level default outputs
+  home:
+    - HTML
+  page:
+    - HTML
+  section:
+    - HTML # Default for sections
+  taxonomy:
+    - HTML
+  term:
+    - HTML
+
+taxonomies:
+  tag: tags
+  skill: skills
+  unit: units
+  category: categories
+
+module:
+  imports:
+    - path: github.com/google/docsy # Tells Hugo to import the Docsy theme module
+      disable: false
+  # You might need mounts depending on how Docsy/your project is structured
+  # Often Hugo handles basic mounts automatically, but being explicit can help
+  # mounts:
+  #   - source: content/en
+  #     target: content
+  #   - source: static
+  #     target: static
+  #   - source: layouts
+  #     target: layouts
+  #   - source: assets
+  #     target: assets
+  #   # Mounts provided by the theme module itself:
+  #   - source: assets
+  #     target: assets
+  #     path: github.com/google/docsy
+  #   - source: layouts
+  #     target: layouts
+  #     path: github.com/google/docsy
+  #   - source: static
+  #     target: static
+  #     path: github.com/google/docsy
+
+  # --- Section to allow raw html within md pages since I trust my own content ---
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
+  # --- ADD THIS SECTION TO YOUR hugo.yaml ---
+menu:
+  main: # This name MUST match what navbar.html uses (.Site.Menus.main)
+    - name: Units
+      # IMPORTANT: Change this to the actual path of your Units section overview page
+      # Examples: "/units/", "/docs/units/", etc. Needs a corresponding _index.md or page.
+      pageRef: /chapters/
+      weight: 10 # Lower weight appears first
+    - name: News
+      # IMPORTANT: Change this to the actual path of your News section
+      pageRef: /news/
+      weight: 30
+# --- END OF SECTION TO ADD ---
+
+# ... (Rest of your hugo.yaml content) ...
+
+params:
+  copyright: "Stéphane Jacquet | All Rights Reserved"
+  offlineSearch: True 
+  ui:
+    navbar_logo: false
+    breadcrumb_disable: false
+    showLightDarkModeMenu: true
+    showLightDarkModeMenu: false

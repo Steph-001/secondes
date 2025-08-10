@@ -1,0 +1,67 @@
+{{/* layouts/shortcodes/pdf.html */}}
+{{/*
+  Displays an embedded PDF viewer with a fixed aspect ratio (A4 portrait default)
+  and optional alignment and maximum width.
+
+  Parameters:
+    src (required): Path to the PDF file.
+    max_width (optional): Maximum width (e.g., "800px", "90%"). Defaults to 100%.
+    align (optional): Horizontal alignment ("center" or "left"). Defaults to "center".
+    aspect_ratio (optional): Height/Width ratio. Defaults to A4 portrait (1.4143).
+
+  Usage examples:
+    {{< pdf src="report.pdf" >}} (Centered, 100% max-width)
+    {{< pdf src="report.pdf" max_width="700px" >}} (Centered, max 700px wide)
+    {{< pdf src="report.pdf" max_width="80%" align="left" >}} (Left-aligned, max 80% wide)
+    {{< pdf src="landscape.pdf" aspect_ratio="0.707" >}} (Landscape A4)
+*/}}
+
+{{ $src := .Get "src" }}
+{{ $maxWidth := .Get "max_width" | default "100%" }}
+{{ $align := .Get "align" | default "center" }}
+{{/* Allow overriding aspect ratio, default to A4 Portrait (29.7 / 21) */}}
+{{ $aspectRatio := .Get "aspect_ratio" | default "1.4143" }}
+{{ $aspectRatioPercent := printf "%v%%" (mul (float $aspectRatio) 100.0) }}
+
+
+{{ $file := .Page.Resources.GetMatch $src }}
+{{ $pdfSrc := "" }}
+{{ if $file }}
+    {{ $pdfSrc = $file.RelPermalink }}
+{{ else }}
+    {{ $pdfSrc = $src | relURL }}
+{{ end }}
+
+{{ if $pdfSrc }}
+  {{/* Build classes for the outer wrapper */}}
+  {{ $outerClasses := "td-pdf-embed-wrapper mb-4" }}
+  {{ if eq $align "center" }}
+    {{ $outerClasses = printf "%s %s" $outerClasses "mx-auto" }}
+  {{ end }}
+
+  {{/* Outer wrapper controls max-width and alignment */}}
+  <div class="{{ $outerClasses }}" style="max-width: {{ $maxWidth }};">
+
+      {{/* Inner container uses padding-bottom hack to enforce aspect ratio */}}
+      <div class="pdf-aspect-ratio-container" style="position: relative; height: 0; padding-bottom: {{ $aspectRatioPercent }}; overflow: hidden; border-radius: var(--bs-border-radius, 0.375rem); border: 1px solid #ccc;">
+          {{/* The object is positioned absolutely to fill the container */}}
+          <object class="td-pdf-embed" data="{{ $pdfSrc }}" type="application/pdf" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;">
+              {{/* Fallback content */}}
+              <p style="padding: 1rem;">It appears your browser doesn't support embedding PDFs. You can <a href="{{ $pdfSrc }}" target="_blank" rel="noopener noreferrer">download the PDF file instead</a>.</p>
+          </object>
+      </div>
+
+      {{/* Link remains below the embed */}}
+      {{/* Using inline styles for simplicity here, consider moving to CSS */}}
+      <a href="{{ $pdfSrc }}" target="_blank" rel="noopener noreferrer" class="td-pdf-fullscreen-link rounded" style="display: block; text-align: center; margin-top: 0.5rem; padding: 0.5rem 1rem; background-color: #eee; border: 1px solid #ccc; text-decoration: none; color: #333; font-size: 0.9rem; transition: background-color 0.2s ease;">
+          View Fullscreen / New Tab
+      </a>
+      <style> /* Minimal hover style - best in main CSS */
+          .td-pdf-embed-wrapper .td-pdf-fullscreen-link:hover { background-color: #ddd; text-decoration: none; color: #000; }
+      </style>
+  </div>
+{{ else }}
+  <div class="alert alert-danger" role="alert">
+      PDF Shortcode Error: Could not find PDF file with src "{{ $src }}"
+  </div>
+{{ end }}

@@ -1,0 +1,32 @@
+[
+  {
+    "base": "do",
+    "past": "did",
+    "participle": "done"
+  },
+  {
+    "base": "say",
+    "past": "said",
+    "participle": "said"
+  },
+  {
+    "base": "go",
+    "past": "went",
+    "participle": "gone"
+  },
+  {
+    "base": "get",
+    "past": "got",
+    "participle": "got/gotten"
+  },
+  {
+    "base": "make",
+    "past": "made",
+    "participle": "made"
+  },
+  {
+    "base": "write",
+    "past": "wrote",
+    "participle": "written"
+  }
+]

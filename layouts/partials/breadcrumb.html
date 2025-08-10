@@ -1,0 +1,58 @@
+{{/* layouts/partials/breadcrumb.html */}}
+
+{{/* Define the recursive template FIRST (must be top-level) */}}
+{{- define "breadcrumbnav" -}}
+  {{/* If the current step (.p1) has a Parent */}}
+  {{ if .p1.Parent -}}
+    {{/* And if that Parent is NOT the Homepage */}}
+    {{ if not .p1.Parent.IsHome -}}
+      {{/* Recurse: call self with the Parent as the new current step */}}
+      {{ template "breadcrumbnav" (dict "p1" .p1.Parent "p2" .p2 )  -}}
+    {{ end -}}
+  {{/* Else if the current step (.p1) does NOT have a Parent (e.g., top-level section)
+       AND is not the Home page itself. This branch tries to add Home as the root. */}}
+  {{ else if not .p1.IsHome -}}
+    {{/* Check if Site.Home exists before trying to use it */}}
+    {{ with .p1.Site.Home }}
+        {{/* Avoid infinite recursion if Home has no parent (shouldn't happen but safe)
+            and avoid linking Home to itself if it's the only ancestor */}}
+        {{ if ne . .p1 }}
+            {{ template "breadcrumbnav" (dict "p1" . "p2" .p2 )  }}
+        {{ end }}
+    {{ end }}
+  {{ end -}}
+
+  {{/* Check if the current step (.p1) is the actual page we started with (.p2) */}}
+  {{ $isActive := eq .p1 .p2 }}
+  <li class="breadcrumb-item{{ if $isActive }} active{{ end }}"
+      {{- if $isActive }} aria-current="page"{{ end }}>
+    {{ if $isActive -}}
+      {{/* If active, just display the title */}}
+      {{ .p1.LinkTitle -}}
+    {{ else -}}
+      {{/* If not active, display a link */}}
+      <a href="{{ .p1.RelPermalink }}">{{ .p1.LinkTitle }}</a>
+    {{- end -}}
+  </li>
+{{- end -}} {{/* End define "breadcrumbnav" */}}
+
+
+{{/* Now, check the condition for rendering */}}
+{{ if gt (len .Ancestors) 1 }}
+
+  {{/* Calculate $isSingle only if we are rendering */}}
+  {{ $isSingle := true -}}
+  {{ with .Parent -}}
+    {{ $isSingle = .IsHome -}}
+  {{ end -}}
+
+  {{/* Render the main breadcrumb structure */}}
+  <nav aria-label="breadcrumb" class="td-breadcrumbs
+      {{- if $isSingle }} td-breadcrumbs__single {{- end }}">
+    <ol class="breadcrumb">
+      {{/* Call the recursive template defined above */}}
+      {{- template "breadcrumbnav" (dict "p1" . "p2" .) }}
+    </ol>
+  </nav>
+
+{{ end }} {{/* End of the conditional check: if gt (len .Ancestors) 1 */}}

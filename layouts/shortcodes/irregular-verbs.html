@@ -1,0 +1,1467 @@
+<!-- layouts/shortcodes/irregular-verbs.html -->
+{{ $indexPage := .Page.Parent }}
+{{ if not $indexPage }}
+{{ $indexPage = .Page.Site.GetPage (.Page.Dir | strings.TrimSuffix "/") }}
+{{ end }}
+
+<!-- Simple Irregular Verbs Flashcards - loads data from JSON -->
+<div class="login-link-container" style="text-align: right; margin-bottom: 0.5rem;">
+<a href="/login/" id="auth-link" class="login-link" style="color: #007bff; text-decoration: none; font-size: 0.9rem;">Login</a>
+</div>
+
+<div class="flashcards-container">
+<div class="flashcards-header">
+<h3>🔄 Irregular Verbs - {{ $indexPage.Title }}</h3>
+<div class="flashcards-controls">
+<div class="control-buttons">
+<button id="mode-toggle-btn" class="btn btn-secondary">📖 Browse</button>
+<button id="early-review-btn" class="btn btn-info">⏰ Early Review</button>
+<button id="reset-progress" class="btn btn-outline">🔄 Reset</button>
+</div>
+<div class="progress-display">
+<span id="current-card">1</span> / <span id="total-cards">0</span>
+</div>
+</div>
+</div>
+
+<div class="flashcard-wrapper">
+<div class="flashcard" id="flashcard">
+<div class="flashcard-inner">
+<div class="flashcard-front">
+<div class="card-content">
+<div class="question" id="card-question"></div>
+<div class="card-hint">Tap to reveal answer</div>
+</div>
+</div>
+<div class="flashcard-back">
+<div class="card-content">
+<div class="question-small" id="card-question-back"></div>
+<div class="answer" id="card-answer"></div>
+<div class="card-hint">Tap to flip back</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="flashcards-navigation">
+<div class="nav-top">
+<button id="next-btn" class="btn btn-primary">Next →</button>
+</div>
+<div class="nav-middle">
+<div class="difficulty-buttons" id="difficulty-buttons">
+<button id="again-btn" class="btn btn-danger-dark">🚫 Again</button>
+<button id="hard-btn" class="btn btn-danger">😰 Hard</button>
+<button id="medium-btn" class="btn btn-warning">🤔 Medium</button>
+<button id="easy-btn" class="btn btn-success">😊 Easy</button>
+</div>
+</div>
+<div class="nav-bottom">
+<button id="prev-btn" class="btn btn-primary">← Previous</button>
+</div>
+</div>
+
+<div class="progress-stats">
+<div class="stat">
+<span class="stat-label">Reviewed:</span>
+<span id="reviewed-count">0</span>
+</div>
+<div class="stat">
+<span class="stat-label">Again:</span>
+<span id="again-count">0</span>
+</div>
+<div class="stat">
+<span class="stat-label">Hard:</span>
+<span id="hard-count">0</span>
+</div>
+<div class="stat">
+<span class="stat-label">Medium:</span>
+<span id="medium-count">0</span>
+</div>
+<div class="stat">
+<span class="stat-label">Easy:</span>
+<span id="easy-count">0</span>
+</div>
+<div class="stat">
+<span class="stat-label">Due:</span>
+<span id="review-count">0</span>
+</div>
+</div>
+
+<div class="completion-message" id="completion-message" style="display: none;">
+<div class="completion-content">
+<div class="completion-icon">🎉</div>
+<h3 class="completion-title">Great Job!</h3>
+<p class="completion-text" id="completion-text"></p>
+<div class="completion-actions">
+<button id="early-review-option" class="btn btn-info" style="display: none;">⏰ Review Early Cards</button>
+<button id="browse-all-option" class="btn btn-secondary">📖 Browse All Cards</button>
+<button id="close-completion" class="btn btn-primary">✨ Done</button>
+</div>
+</div>
+</div>
+</div>
+
+<style>
+/* CRITICAL: Fix mobile viewport and prevent horizontal scrolling */
+html, body {
+max-width: 100%;
+overflow-x: hidden;
+box-sizing: border-box;
+}
+
+*, *::before, *::after {
+box-sizing: border-box;
+max-width: 100%;
+}
+
+.flashcards-container {
+max-width: 100vw;
+width: 100%;
+overflow-x: hidden;
+box-sizing: border-box;
+margin: 0 auto;
+padding: 1rem;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+display: flex;
+flex-direction: column;
+gap: 1rem;
+}
+
+/* Fix header layout on mobile */
+.flashcards-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 1rem;
+flex-wrap: wrap;
+gap: 1rem;
+width: 100%;
+max-width: 100%;
+}
+
+.flashcards-header h3 {
+margin: 0;
+color: #333;
+font-size: clamp(1.2rem, 4vw, 1.5rem);
+word-break: break-word;
+hyphens: auto;
+}
+
+.flashcards-controls {
+display: flex;
+align-items: center;
+gap: 1.2rem;
+flex-wrap: wrap;
+padding: 0.5rem 0;
+width: 100%;
+max-width: 100%;
+overflow-x: hidden;
+}
+
+.control-buttons {
+display: flex;
+gap: 0.8rem;
+flex-wrap: wrap;
+max-width: 100%;
+}
+
+.progress-display {
+background: #f5f5f5;
+padding: 0.5rem 0.75rem;
+border-radius: 20px;
+font-weight: bold;
+color: #666;
+font-size: clamp(0.8rem, 3vw, 0.9rem);
+white-space: nowrap;
+}
+
+/* Fix flashcard container */
+.flashcard-wrapper {
+perspective: 1000px;
+margin: 1.5rem 0;
+display: flex;
+align-items: center;
+width: 100%;
+max-width: 100%;
+}
+
+.flashcard {
+width: 100%;
+max-width: 100%;
+height: clamp(220px, 35vh, 320px);
+position: relative;
+cursor: pointer;
+transition: transform 0.3s ease;
+}
+
+.flashcard:hover {
+transform: translateY(-2px);
+}
+
+.flashcard-inner {
+position: relative;
+width: 100%;
+height: 100%;
+text-align: center;
+transition: transform 0.6s;
+transform-style: preserve-3d;
+}
+
+.flashcard.flipped .flashcard-inner {
+transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+position: absolute;
+width: 100%;
+height: 100%;
+backface-visibility: hidden;
+border-radius: 15px;
+box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.flashcard-front {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+}
+
+.flashcard-back {
+background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+color: white;
+transform: rotateY(180deg);
+}
+
+.card-content {
+padding: clamp(0.73rem, 3vw, 1.25rem);
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: column;
+justify-content: center;
+box-sizing: border-box;
+overflow: hidden;
+word-break: break-word;
+hyphens: auto;
+}
+
+.term, .question {
+font-size: clamp(1.4rem, 5vw, 2rem);
+font-weight: bold;
+margin-bottom: 1rem;
+text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+line-height: 1.3;
+overflow-wrap: break-word;
+hyphens: auto;
+display: flex;
+align-items: center;
+justify-content: center;
+text-align: center;
+height: 100%;
+margin: 0 auto;
+word-break: break-word;
+}
+
+.term-small, .question-small {
+font-size: clamp(0.85rem, 3.2vw, 1.1rem);
+font-weight: bold;
+margin-bottom: 0.75rem;
+opacity: 0.8;
+line-height: 1.3;
+overflow-wrap: break-word;
+text-align: center;
+}
+
+.definition, .answer {
+font-size: clamp(1.4rem, 5vw, 2rem);
+font-weight: bold;
+margin-bottom: 1rem;
+text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+line-height: 1.3;
+overflow-wrap: break-word;
+hyphens: auto;
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+text-align: center;
+word-break: break-word;
+}
+
+.card-hint {
+font-size: clamp(0.7rem, 2.3vw, 0.85rem);
+opacity: 0.7;
+font-style: italic;
+margin-top: auto;
+text-align: center;
+}
+
+/* Fix buttons layout */
+.difficulty-buttons {
+display: flex;
+gap: 0.8rem;
+justify-content: center;
+flex-wrap: wrap;
+width: 100%;
+max-width: 100%;
+/* Initially hidden, will be shown only in study mode */
+display: none;
+}
+
+/* Show difficulty buttons only in study mode */
+.difficulty-buttons.study-mode {
+display: flex !important;
+}
+
+.btn {
+padding: clamp(0.4rem, 1.8vw, 0.6rem) clamp(0.8rem, 2.5vw, 1rem);
+border: none;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 500;
+transition: all 0.2s ease;
+font-size: clamp(0.75rem, 2.8vw, 0.85rem);
+white-space: nowrap;
+min-width: fit-content;
+word-break: keep-all;
+}
+
+.btn:hover {
+transform: translateY(-1px);
+box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.btn-primary { background: #007bff; color: white; }
+.btn-secondary { background: #6c757d; color: white; }
+.btn-success { background: #28a745; color: white; }
+.btn-warning { background: #ffc107; color: #212529; }
+.btn-danger { background: #dc3545; color: white; }
+.btn-danger-dark { background: #8b0000; color: white; }
+.btn-danger-dark:hover { background: #a00000; }
+.btn-outline { background: transparent; border: 2px solid #6c757d; color: #6c757d; }
+.btn-info { background: #17a2b8; color: white; }
+
+.btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+transform: none;
+}
+
+.flashcards-navigation {
+display: flex;
+flex-direction: column;
+gap: 0.75rem;
+margin: 1.5rem 0;
+}
+
+.nav-top, .nav-bottom {
+display: flex;
+justify-content: center;
+}
+
+.nav-middle {
+display: flex;
+justify-content: center;
+}
+
+/* Progress stats fix */
+.progress-stats {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+gap: 0.75rem;
+background: #f8f9fa;
+padding: 0.75rem;
+border-radius: 10px;
+margin-top: 1rem;
+width: 100%;
+max-width: 100%;
+box-sizing: border-box;
+}
+
+.stat {
+text-align: center;
+flex: 1;
+min-width: 70px;
+}
+
+.stat-label {
+display: block;
+font-size: clamp(0.65rem, 2.3vw, 0.75rem);
+color: #666;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.stat span:last-child {
+display: block;
+font-size: clamp(1rem, 3.5vw, 1.3rem);
+font-weight: bold;
+color: #333;
+margin-top: 0.25rem;
+}
+
+.completion-message {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.8);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 1000;
+backdrop-filter: blur(5px);
+}
+
+.completion-content {
+background: white;
+padding: 2rem;
+border-radius: 20px;
+text-align: center;
+max-width: 90%;
+max-height: 90%;
+overflow-y: auto;
+box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+animation: completionSlideIn 0.3s ease-out;
+}
+
+@keyframes completionSlideIn {
+from {
+opacity: 0;
+transform: translateY(-50px) scale(0.9);
+}
+to {
+opacity: 1;
+transform: translateY(0) scale(1);
+}
+}
+
+.completion-icon {
+font-size: 4rem;
+margin-bottom: 1rem;
+animation: bounce 1s ease-in-out infinite alternate;
+}
+
+@keyframes bounce {
+from { transform: translateY(0); }
+to { transform: translateY(-10px); }
+}
+
+.completion-title {
+color: #333;
+margin-bottom: 1rem;
+font-size: 2rem;
+font-weight: bold;
+}
+
+.completion-text {
+color: #666;
+margin-bottom: 2rem;
+font-size: 1.1rem;
+line-height: 1.5;
+}
+
+.completion-actions {
+display: flex;
+gap: 1rem;
+justify-content: center;
+flex-wrap: wrap;
+}
+
+.completion-actions .btn {
+min-width: 120px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+.flashcards-container { padding: 0.75rem; gap: 0.75rem; }
+.flashcards-header { flex-direction: column; align-items: flex-start; margin-bottom: 0.75rem; gap: 0.75rem; }
+.flashcards-controls { flex-direction: column; align-items: flex-start; gap: 0.75rem; width: 100%; }
+.control-buttons { width: 100%; justify-content: flex-start; }
+.progress-display { align-self: flex-start; }
+.flashcard { height: clamp(180px, 30vh, 250px); }
+.flashcard-wrapper { margin: 1rem 0; }
+.flashcards-navigation { margin: 1rem 0; gap: 0.5rem; }
+.card-content { padding: clamp(1.2rem, 4vw, 2rem); }
+.difficulty-buttons { gap: 0.5rem; }
+.progress-stats { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+}
+
+@media (max-width: 480px) {
+.flashcards-container { padding: 0.5rem; }
+.flashcard { height: clamp(150px, 28vh, 220px); }
+.flashcard-wrapper { margin: 0.75rem 0; }
+.flashcards-navigation { margin: 0.75rem 0; }
+.card-content { padding: clamp(1rem, 3.5vw, 1.5rem); }
+.completion-content { padding: 1.5rem; margin: 1rem; }
+.completion-icon { font-size: 3rem; }
+.completion-title { font-size: 1.5rem; }
+.completion-text { font-size: 1rem; }
+.completion-actions { flex-direction: column; align-items: center; }
+.completion-actions .btn { width: 100%; max-width: 200px; }
+.progress-stats { grid-template-columns: repeat(2, 1fr); }
+.difficulty-buttons { flex-wrap: wrap; gap: 0.3rem; }
+.difficulty-buttons .btn { flex: 1; min-width: 60px; font-size: 0.7rem; padding: 0.3rem 0.5rem; }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+.flashcard { height: clamp(120px, 45vh, 180px); }
+.flashcard-wrapper { margin: 0.5rem 0; }
+.flashcards-navigation { margin: 0.5rem 0; gap: 0.3rem; }
+.flashcards-header h3 { font-size: 1rem; }
+.progress-stats { padding: 0.5rem; }
+.card-content { padding: clamp(0.8rem, 3vw, 1.2rem); }
+}
+
+.term, .question, .definition, .answer {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+font-size: clamp(1.8rem, 6vw, 2.4rem);
+font-weight: bold;
+line-height: 1.2;
+letter-spacing: normal;
+}
+
+.term-small, .question-small {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+font-size: clamp(1rem, 3.5vw, 1.2rem);
+font-weight: normal;
+opacity: 0.8;
+}
+</style>
+
+
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+// Initialize Supabase
+const { createClient } = supabase;
+const supabaseClient = createClient(
+  'https://xjurrqzjvhzjweufgivl.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqdXJycXpqdmh6andldWZnaXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NDUzMTIsImV4cCI6MjA2NDUyMTMxMn0.rimZk-g9-RmvQCbQJ5Phk0lKwOue6pPlgibO-LKHqmM'
+);
+
+// Auth functionality
+let authCheckInProgress = false;
+let lastAuthCheck = 0;
+const AUTH_CHECK_THROTTLE = 5000;
+
+async function updateAuthLink() {
+  const now = Date.now();
+  if (authCheckInProgress || (now - lastAuthCheck) < AUTH_CHECK_THROTTLE) {
+    return;
+  }
+  
+  authCheckInProgress = true;
+  lastAuthCheck = now;
+  
+  const authLink = document.getElementById('auth-link');
+  if (!authLink) {
+    authCheckInProgress = false;
+    return;
+  }
+  
+  try {
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    
+    if (error || !session?.user) {
+      authLink.textContent = 'Login';
+      authLink.href = '/login/';
+      authLink.onclick = null;
+      return;
+    }
+    
+    authLink.textContent = 'Logout';
+    authLink.onclick = async function(e) {
+      e.preventDefault();
+      try {
+        await supabaseClient.auth.signOut();
+        window.location.reload();
+      } catch (err) {
+        window.location.reload();
+      }
+    };
+  } catch (err) {
+    authLink.textContent = 'Login';
+    authLink.href = '/login/';
+    authLink.onclick = null;
+  } finally {
+    authCheckInProgress = false;
+  }
+}
+
+// Pattern-based Irregular Verbs System
+class IrregularVerbsSystem {
+  constructor() {
+    this.irregularVerbs = [];
+    this.flashcards = [];
+    
+    // System state
+    this.setId = `irregular_verbs_{{ $indexPage.RelPermalink }}`.replace(/\/+$/, '').replace(/^\//, '');
+    this.setTitle = `Irregular Verbs - {{ $indexPage.Title }}`;
+    this.cardData = {};
+    this.sessionStats = { reviewed: 0, again: 0, hard: 0, medium: 0, easy: 0 };
+    this.reviewedInSession = new Set();
+    this.currentIndex = 0;
+    this.isFlipped = false;
+    this.viewMode = 'browse';
+    this.cardOrder = [];
+    
+    // FIXED: Track original session size and completed cards for proper counter
+    this.originalSessionSize = 0;
+    this.completedInSession = 0;
+    this.sessionCardRatings = new Map(); // cardId -> latest rating in this session
+    
+    // Initialize
+    this.initDOM();
+    this.setupEventListeners();
+    this.loadVerbsData().then(() => {
+      this.loadProgress().then(() => {
+        this.initializeSession();
+        this.updateDisplay();
+      });
+    });
+  }
+  
+  // Load verbs from JSON file
+  async loadVerbsData() {
+    try {
+      const response = await fetch('/data/irregular-verbs.json');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      this.irregularVerbs = data.filter(verb => verb.base && verb.past && verb.participle);
+      this.flashcards = this.generatePatternCards();
+      
+      if (this.flashcards.length === 0) {
+        console.error('No valid verbs loaded from JSON file');
+      }
+    } catch (error) {
+      console.error('Error loading verbs data:', error);
+      // Fallback to basic verbs
+      this.irregularVerbs = [
+        {base: "go", past: "went", participle: "gone"},
+        {base: "be", past: "was/were", participle: "been"},
+        {base: "have", past: "had", participle: "had"},
+        {base: "do", past: "did", participle: "done"},
+        {base: "think", past: "thought", participle: "thought"}
+      ];
+      this.flashcards = this.generatePatternCards();
+    }
+  }
+  
+  // Generate pattern-based cards for each verb
+  generatePatternCards() {
+    const allCards = [];
+    
+    this.irregularVerbs.forEach((verb, verbIndex) => {
+      const verbId = `${verb.base}_${verb.past}_${verb.participle}`.replace(/[^a-zA-Z0-9_]/g, '_');
+      
+      // Card 1: Show base, test past and participle
+      allCards.push({
+        id: `${verbId}_show_base`,
+        prompt: `${verb.base} \u00A0\u00A0\u00A0 ___ \u00A0\u00A0\u00A0 ___`,
+        answer: `___\u00A0\u00A0\u00A0 ${verb.past}\u00A0\u00A0 ${verb.participle}`,
+        verbId: verbId,
+        verbIndex: verbIndex,
+        cardType: 'show_base'
+      });
+      
+      // Card 2: Show past, test base and participle
+      allCards.push({
+        id: `${verbId}_show_past`,
+        prompt: `___\u00A0\u00A0\u00A0 ${verb.past}\u00A0\u00A0\u00A0 ___`,
+        answer: `${verb.base}\u00A0\u00A0\u00A0 ___ \u00A0\u00A0\u00A0${verb.participle}`,
+        verbId: verbId,
+        verbIndex: verbIndex,
+        cardType: 'show_past'
+      });
+      
+      // Card 3: Show participle, test base and past
+      allCards.push({
+        id: `${verbId}_show_participle`,
+        prompt: `___\u00A0\u00A0\u00A0 ___\u00A0\u00A0\u00A0 ${verb.participle}`,
+        answer: `${verb.base}\u00A0\u00A0\u00A0 ${verb.past}\u00A0\u00A0\u00A0 ___`,
+        verbId: verbId,
+        verbIndex: verbIndex,
+        cardType: 'show_participle'
+      });
+    });
+    
+    return allCards;
+  }
+  
+  // Initialize DOM elements
+  initDOM() {
+    this.elements = {
+      flashcard: document.getElementById('flashcard'),
+      cardQuestion: document.getElementById('card-question'),
+      cardAnswer: document.getElementById('card-answer'),
+      currentCard: document.getElementById('current-card'),
+      totalCards: document.getElementById('total-cards'),
+      prevBtn: document.getElementById('prev-btn'),
+      nextBtn: document.getElementById('next-btn'),
+      modeToggleBtn: document.getElementById('mode-toggle-btn'),
+      earlyReviewBtn: document.getElementById('early-review-btn'),
+      resetBtn: document.getElementById('reset-progress'),
+      againBtn: document.getElementById('again-btn'),
+      hardBtn: document.getElementById('hard-btn'),
+      mediumBtn: document.getElementById('medium-btn'),
+      easyBtn: document.getElementById('easy-btn'),
+      reviewedCount: document.getElementById('reviewed-count'),
+      againCount: document.getElementById('again-count'),
+      hardCount: document.getElementById('hard-count'),
+      mediumCount: document.getElementById('medium-count'),
+      easyCount: document.getElementById('easy-count'),
+      reviewCount: document.getElementById('review-count'),
+      completionMessage: document.getElementById('completion-message'),
+      completionText: document.getElementById('completion-text'),
+      earlyReviewOption: document.getElementById('early-review-option'),
+      difficultyButtons: document.getElementById('difficulty-buttons')
+    };
+  }
+  
+  // Setup event listeners
+  setupEventListeners() {
+    this.elements.flashcard.addEventListener('click', () => this.flipCard());
+    this.elements.prevBtn.addEventListener('click', () => this.prevCard());
+    this.elements.nextBtn.addEventListener('click', () => this.nextCard());
+    this.elements.modeToggleBtn.addEventListener('click', () => this.toggleViewMode());
+    this.elements.earlyReviewBtn.addEventListener('click', () => this.handleEarlyReview());
+    this.elements.resetBtn.addEventListener('click', () => this.resetProgress());
+    
+    // Difficulty buttons
+    this.elements.againBtn.addEventListener('click', () => this.markDifficulty('again'));
+    this.elements.hardBtn.addEventListener('click', () => this.markDifficulty('hard'));
+    this.elements.mediumBtn.addEventListener('click', () => this.markDifficulty('medium'));
+    this.elements.easyBtn.addEventListener('click', () => this.markDifficulty('easy'));
+    
+    // Completion modal
+    document.getElementById('close-completion').addEventListener('click', () => {
+      this.elements.completionMessage.style.display = 'none';
+      this.startBrowseMode();
+    });
+    
+    document.getElementById('early-review-option').addEventListener('click', () => {
+      this.elements.completionMessage.style.display = 'none';
+      this.startEarlyReview();
+    });
+    
+    document.getElementById('browse-all-option').addEventListener('click', () => {
+      this.elements.completionMessage.style.display = 'none';
+      this.startBrowseMode();
+    });
+  }
+  
+  // Fisher-Yates shuffle algorithm
+  shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+  
+  // Card filtering for spaced repetition
+  getDueCards(includeEarly = false) {
+    const now = Date.now();
+    const allIndices = [...Array(this.flashcards.length).keys()];
+    
+    if (includeEarly) {
+      const earlyThreshold = now + (24 * 60 * 60 * 1000);
+      return allIndices.filter(idx => {
+        const cardId = this.flashcards[idx].id;
+        const card = this.cardData[cardId];
+        return !card || !card.nextReview || card.nextReview <= earlyThreshold;
+      });
+    } else {
+      return allIndices.filter(idx => {
+        const cardId = this.flashcards[idx].id;
+        const card = this.cardData[cardId];
+        return !card || !card.nextReview || card.nextReview <= now;
+      });
+    }
+  }
+  
+  // SM-2 Spaced Repetition Algorithm
+  updateCardWithSM2(cardId, difficulty) {
+    if (!this.cardData[cardId]) {
+      this.cardData[cardId] = {
+        interval: 0,
+        easeFactor: 2.5,
+        reviewCount: 0,
+        lastReviewed: Date.now(),
+        nextReview: Date.now()
+      };
+    }
+    
+    const card = this.cardData[cardId];
+    card.reviewCount++;
+    card.lastReviewed = Date.now();
+    
+    // 4-Level SM-2 implementation
+    if (difficulty === 'again') {
+      card.interval = 0.007; // ~10 minutes
+      card.easeFactor = Math.max(1.3, card.easeFactor - 0.05);
+    } else if (difficulty === 'hard') {
+      if (card.reviewCount === 1) {
+        card.interval = 1;
+      } else if (card.reviewCount === 2) {
+        card.interval = 2;
+      } else {
+        card.interval = Math.round(card.interval * card.easeFactor * 0.8);
+      }
+      card.easeFactor = Math.max(1.3, card.easeFactor - 0.15);
+    } else if (difficulty === 'medium') {
+      if (card.reviewCount === 1) {
+        card.interval = 1;
+      } else if (card.reviewCount === 2) {
+        card.interval = 3;
+      } else {
+        card.interval = Math.round(card.interval * card.easeFactor);
+      }
+      card.easeFactor = Math.max(1.3, card.easeFactor - 0.1);
+    } else if (difficulty === 'easy') {
+      if (card.reviewCount === 1) {
+        card.interval = 2;
+      } else if (card.reviewCount === 2) {
+        card.interval = 4;
+      } else {
+        card.interval = Math.round(card.interval * card.easeFactor * 1.3);
+      }
+      card.easeFactor = Math.min(2.5, card.easeFactor + 0.15);
+    }
+    
+    card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
+  }
+  
+  // FIXED: Mark difficulty with proper counter management
+  async markDifficulty(level) {
+    if (!this.isFlipped) {
+      this.flipCard();
+      return;
+    }
+    
+    if (this.viewMode !== 'study') {
+      return;
+    }
+    
+    const cardIndex = this.cardOrder[this.currentIndex];
+    const card = this.flashcards[cardIndex];
+    const cardId = card.id;
+    
+    // FIXED: Proper counter management
+    const previousRating = this.sessionCardRatings.get(cardId);
+    
+    // If this card was previously rated in this session, decrement the old counter
+    if (previousRating) {
+      this.sessionStats[previousRating]--;
+    } else {
+      // This is a new card being reviewed
+      this.sessionStats.reviewed++;
+      this.reviewedInSession.add(cardId);
+    }
+    
+    // Increment the new rating counter
+    this.sessionStats[level]++;
+    
+    // Update the card's current session rating
+    this.sessionCardRatings.set(cardId, level);
+    
+    // Apply SM-2 algorithm
+    this.updateCardWithSM2(cardId, level);
+    
+    // Save progress and update display
+    await this.saveProgress();
+    this.updateStatsDisplay();
+    
+    // FIXED: Handle card progression with proper counter tracking
+    if (level === 'again') {
+      if (this.currentIndex < this.cardOrder.length - 1) {
+        this.currentIndex++;
+      } else {
+        this.currentIndex = 0;
+      }
+      this.updateCard();
+    } else {
+      // Card completed - increment completion counter
+      this.completedInSession++;
+      
+      // Remove completed card from order
+      this.cardOrder.splice(this.currentIndex, 1);
+      
+      if (this.currentIndex >= this.cardOrder.length && this.cardOrder.length > 0) {
+        this.currentIndex = this.cardOrder.length - 1;
+      }
+      
+      if (this.cardOrder.length > 0) {
+        this.updateCard();
+      } else {
+        this.saveProgress();
+        this.showCompletionMessage();
+      }
+    }
+  }
+  
+  // Session management
+  startStudyMode() {
+    const dueCards = this.getDueCards();
+    
+    if (dueCards.length > 0) {
+      this.viewMode = 'study';
+      this.cardOrder = this.shuffleArray(dueCards);
+      this.currentIndex = 0;
+      
+      // FIXED: Set original session size and reset completion counter
+      this.originalSessionSize = this.cardOrder.length;
+      this.completedInSession = 0;
+      
+      this.updateModeButton('📚 Studying', 'btn-primary');
+      this.updateCard();
+    } else {
+      this.checkForEarlyReview();
+    }
+  }
+  
+  startEarlyReview() {
+    const allEarly = this.getDueCards(true);
+    const dueNow = this.getDueCards(false);
+    const earlyOnly = allEarly.filter(idx => !dueNow.includes(idx));
+    
+    if (earlyOnly.length > 0) {
+      this.viewMode = 'study';
+      this.cardOrder = this.shuffleArray(earlyOnly);
+      this.currentIndex = 0;
+      
+      // FIXED: Set original session size and reset completion counter
+      this.originalSessionSize = this.cardOrder.length;
+      this.completedInSession = 0;
+      
+      this.updateModeButton('📚 Studying', 'btn-primary');
+      this.updateCard();
+    } else {
+      alert("No cards are available for early review right now.");
+    }
+  }
+  
+  startBrowseMode() {
+    this.viewMode = 'browse';
+    this.cardOrder = [...Array(this.flashcards.length).keys()];
+    this.currentIndex = 0;
+    this.updateModeButton('📖 Browsing', 'btn-secondary');
+    this.updateCard();
+  }
+  
+  checkForEarlyReview() {
+    const allEarly = this.getDueCards(true);
+    const dueNow = this.getDueCards(false);
+    const earlyCount = allEarly.length - dueNow.length;
+    
+    if (earlyCount > 0) {
+      const message = `No cards are due right now, but you have ${earlyCount} card${earlyCount !== 1 ? 's' : ''} due within 24 hours.\n\nWould you like to review them early?`;
+      if (confirm(message)) {
+        this.startEarlyReview();
+      } else {
+        this.startBrowseMode();
+      }
+    } else {
+      this.showCompletionMessage();
+      this.viewMode = 'browse';
+    }
+  }
+  
+  // UI Updates
+  updateModeButton(text, className) {
+    this.elements.modeToggleBtn.textContent = text;
+    this.elements.modeToggleBtn.className = `btn ${className}`;
+    
+    // Show/hide difficulty buttons based on mode
+    if (this.elements.difficultyButtons) {
+      if (this.viewMode === 'study') {
+        this.elements.difficultyButtons.classList.add('study-mode');
+      } else {
+        this.elements.difficultyButtons.classList.remove('study-mode');
+      }
+    }
+  }
+  
+  toggleViewMode() {
+    if (this.viewMode === 'browse') {
+      this.startStudyMode();
+    } else {
+      this.startBrowseMode();
+    }
+    this.saveProgressSilent();
+  }
+  
+  handleEarlyReview() {
+    const allEarly = this.getDueCards(true);
+    const dueNow = this.getDueCards(false);
+    const earlyCount = allEarly.length - dueNow.length;
+    
+    if (earlyCount > 0) {
+      this.startEarlyReview();
+    } else if (dueNow.length > 0) {
+      alert("You have cards due for review! Use the Study button instead.");
+    } else {
+      alert("No cards are available for early review right now.");
+    }
+  }
+  
+  // Display updates
+  updateCard() {
+    if (this.flashcards.length === 0) {
+      this.elements.cardQuestion.innerHTML = "Loading verbs...";
+      this.elements.cardAnswer.innerHTML = "Please wait while verbs are loaded";
+      return;
+    }
+    
+    if (this.currentIndex < 0 || this.currentIndex >= this.cardOrder.length) {
+      this.currentIndex = 0;
+    }
+    
+    const cardIndex = this.cardOrder[this.currentIndex];
+    const card = this.flashcards[cardIndex];
+    
+    if (!card) {
+      console.error('Invalid card at index:', cardIndex);
+      return;
+    }
+    
+    // Simple display - no formatting needed
+    this.elements.cardQuestion.innerHTML = card.prompt;
+    this.elements.cardAnswer.innerHTML = card.answer;
+    
+    // FIXED: Display proper counter based on mode
+    if (this.viewMode === 'study') {
+      // In study mode: show completed out of original total
+      this.elements.currentCard.textContent = this.completedInSession + 1;
+      this.elements.totalCards.textContent = this.originalSessionSize;
+    } else {
+      // In browse mode: show current position
+      this.elements.currentCard.textContent = this.currentIndex + 1;
+      this.elements.totalCards.textContent = this.cardOrder.length;
+    }
+    
+    // Update navigation buttons
+    this.elements.prevBtn.disabled = this.currentIndex === 0;
+    this.elements.nextBtn.disabled = this.currentIndex === this.cardOrder.length - 1;
+    
+    // Reset flip state
+    this.isFlipped = false;
+    this.elements.flashcard.classList.remove('flipped');
+  }
+  
+  // Stats display with proper counting
+  updateStatsDisplay() {
+    const totalReviewed = Object.values(this.cardData).filter(card => card && card.reviewCount > 0).length;
+    const needsReview = this.getDueCards().length;
+    
+    this.elements.reviewedCount.textContent = totalReviewed;
+    this.elements.reviewCount.textContent = needsReview;
+    
+    // Display session counters directly
+    this.elements.againCount.textContent = this.sessionStats.again;
+    this.elements.hardCount.textContent = this.sessionStats.hard;
+    this.elements.mediumCount.textContent = this.sessionStats.medium;
+    this.elements.easyCount.textContent = this.sessionStats.easy;
+  }
+  
+  updateDisplay() {
+    this.updateCard();
+    this.updateStatsDisplay();
+    
+    // Set mode button
+    if (this.viewMode === 'study') {
+      this.updateModeButton('📚 Studying', 'btn-primary');
+    } else {
+      this.updateModeButton('📖 Browsing', 'btn-secondary');
+    }
+  }
+  
+  // Navigation
+  flipCard() {
+    this.isFlipped = !this.isFlipped;
+    this.elements.flashcard.classList.toggle('flipped');
+  }
+  
+  nextCard() {
+    if (this.currentIndex < this.cardOrder.length - 1) {
+      this.currentIndex++;
+      this.updateCard();
+      if (this.viewMode === 'study') {
+        this.saveProgressSilent();
+      }
+    }
+  }
+  
+  prevCard() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.updateCard();
+      if (this.viewMode === 'study') {
+        this.saveProgressSilent();
+      }
+    }
+  }
+  
+  // Completion
+  showCompletionMessage() {
+    this.viewMode = 'browse';
+    this.updateModeButton('📖 Browsing', 'btn-secondary');
+    
+    const nextReview = this.getNextReviewTime();
+    const allEarly = this.getDueCards(true);
+    const dueNow = this.getDueCards(false);
+    const earlyCards = allEarly.length - dueNow.length;
+    
+    let message = "You've reviewed all due irregular verb cards!";
+    
+    if (nextReview) {
+      const timeUntil = nextReview - Date.now();
+      const hoursUntil = Math.ceil(timeUntil / (1000 * 60 * 60));
+      const daysUntil = Math.ceil(timeUntil / (1000 * 60 * 60 * 24));
+      
+      if (hoursUntil < 24) {
+        message += ` Next cards will be ready in about ${hoursUntil} hour${hoursUntil !== 1 ? 's' : ''}.`;
+      } else {
+        message += ` Next cards will be ready in about ${daysUntil} day${daysUntil !== 1 ? 's' : ''}.`;
+      }
+    }
+    
+    this.elements.completionText.textContent = message;
+    
+    if (earlyCards > 0) {
+      this.elements.earlyReviewOption.style.display = 'inline-block';
+      this.elements.earlyReviewOption.textContent = `⏰ Review ${earlyCards} Early Card${earlyCards !== 1 ? 's' : ''}`;
+    } else {
+      this.elements.earlyReviewOption.style.display = 'none';
+    }
+    
+    this.elements.completionMessage.style.display = 'flex';
+    this.saveProgressSilent();
+  }
+  
+  getNextReviewTime() {
+    const now = Date.now();
+    let earliest = null;
+    
+    for (let i = 0; i < this.flashcards.length; i++) {
+      const cardId = this.flashcards[i].id;
+      const card = this.cardData[cardId];
+      
+      if (card && card.nextReview && card.nextReview > now) {
+        if (!earliest || card.nextReview < earliest) {
+          earliest = card.nextReview;
+        }
+      }
+    }
+    
+    return earliest;
+  }
+  
+  // Reset progress
+  resetProgress() {
+    if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+      this.cardData = {};
+      this.sessionStats = { reviewed: 0, again: 0, hard: 0, medium: 0, easy: 0 };
+      this.reviewedInSession = new Set();
+      this.sessionCardRatings = new Map();
+      
+      // Reset session tracking
+      this.originalSessionSize = 0;
+      this.completedInSession = 0;
+      
+      this.viewMode = 'browse';
+      this.cardOrder = [...Array(this.flashcards.length).keys()];
+      this.currentIndex = 0;
+      this.updateDisplay();
+      this.saveProgressSilent();
+    }
+  }
+  
+  // Session initialization
+  initializeSession() {
+    if (this.viewMode === 'study') {
+      const dueCards = this.getDueCards();
+      if (dueCards.length > 0) {
+        this.cardOrder = this.shuffleArray(dueCards);
+        this.currentIndex = 0;
+        
+        // Initialize session tracking
+        this.originalSessionSize = this.cardOrder.length;
+        this.completedInSession = 0;
+        
+        this.updateModeButton('📚 Studying', 'btn-primary');
+      } else {
+        this.viewMode = 'browse';
+        this.cardOrder = [...Array(this.flashcards.length).keys()];
+        this.currentIndex = Math.min(this.currentIndex, this.cardOrder.length - 1);
+        this.updateModeButton('📖 Browsing', 'btn-secondary');
+      }
+    } else {
+      this.cardOrder = [...Array(this.flashcards.length).keys()];
+      this.currentIndex = Math.min(this.currentIndex, this.cardOrder.length - 1);
+      this.updateModeButton('📖 Browsing', 'btn-secondary');
+    }
+  }
+  
+  // Data persistence
+  async saveProgress() {
+    this.saveToLocalStorage();
+    
+    try {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error || !session?.user?.id) {
+        return;
+      }
+      
+      const progressData = {
+        user_id: session.user.id,
+        set_id: this.setId,
+        set_title: this.setTitle,
+        card_data: {
+          cardOrder: this.cardOrder,
+          currentIndex: this.currentIndex,
+          viewMode: this.viewMode,
+          cardData: this.cardData,
+          originalSessionSize: this.originalSessionSize,
+          completedInSession: this.completedInSession
+        },
+        stats: this.sessionStats,
+        updated_at: new Date().toISOString()
+      };
+      
+      const { error: saveError } = await supabaseClient
+        .from('flashcard_progress')
+        .upsert(progressData, { onConflict: 'user_id,set_id' });
+        
+      if (saveError) {
+        console.error('Supabase save error:', saveError);
+      }
+    } catch (e) {
+      console.error('Error saving progress:', e);
+    }
+  }
+  
+  async saveProgressSilent() {
+    this.saveToLocalStorage();
+    
+    try {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error || !session?.user?.id) {
+        return;
+      }
+      
+      const progressData = {
+        user_id: session.user.id,
+        set_id: this.setId,
+        set_title: this.setTitle,
+        card_data: {
+          cardOrder: this.cardOrder,
+          currentIndex: this.currentIndex,
+          viewMode: this.viewMode,
+          cardData: this.cardData,
+          originalSessionSize: this.originalSessionSize,
+          completedInSession: this.completedInSession
+        },
+        stats: this.sessionStats,
+        updated_at: new Date().toISOString()
+      };
+      
+      await supabaseClient
+        .from('flashcard_progress')
+        .upsert(progressData, { onConflict: 'user_id,set_id' });
+    } catch (e) {
+      // Silent save
+    }
+  }
+  
+  async loadProgress() {
+    // Initialize defaults
+    this.cardData = {};
+    this.sessionStats = { reviewed: 0, again: 0, hard: 0, medium: 0, easy: 0 };
+    this.reviewedInSession = new Set();
+    this.sessionCardRatings = new Map();
+    this.originalSessionSize = 0;
+    this.completedInSession = 0;
+    
+    try {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error || !session?.user?.id) {
+        this.loadFromLocalStorage();
+        return;
+      }
+      
+      const { data, error: dbError } = await supabaseClient
+        .from('flashcard_progress')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('set_id', this.setId)
+        .single();
+        
+      if (dbError && dbError.code !== 'PGRST116') {
+        console.error('Database error:', dbError);
+        this.loadFromLocalStorage();
+        return;
+      }
+      
+      if (data) {
+        this.loadFromData(data);
+        await this.migrateLocalStorageIfNewer(data.updated_at);
+      } else {
+        this.loadFromLocalStorage();
+        if (session?.user) {
+          await this.saveProgressSilent();
+        }
+      }
+    } catch (e) {
+      console.error('Error loading progress:', e);
+      this.loadFromLocalStorage();
+    }
+  }
+  
+  loadFromData(data) {
+    if (data.card_data) {
+      this.cardOrder = this.validateArray(data.card_data.cardOrder, this.flashcards.length) ||
+        [...Array(this.flashcards.length).keys()];
+      this.cardData = this.validateCardData(data.card_data.cardData) || {};
+      this.currentIndex = Math.max(0, Math.min(data.card_data.currentIndex || 0, this.cardOrder.length - 1));
+      this.viewMode = ['browse', 'study'].includes(data.card_data.viewMode) ?
+        data.card_data.viewMode : 'browse';
+        
+      // Load session tracking data
+      this.originalSessionSize = data.card_data.originalSessionSize || 0;
+      this.completedInSession = data.card_data.completedInSession || 0;
+    }
+    
+    if (data.stats && typeof data.stats === 'object') {
+      this.sessionStats = {
+        reviewed: data.stats.reviewed || 0,
+        again: data.stats.again || 0,
+        hard: data.stats.hard || 0,
+        medium: data.stats.medium || 0,
+        easy: data.stats.easy || 0
+      };
+    }
+  }
+  
+  loadFromLocalStorage() {
+    const storageKey = `irregular_verbs_${this.setId}`;
+    const saved = localStorage.getItem(storageKey);
+    
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        this.loadFromData({
+          card_data: {
+            cardOrder: data.cardOrder,
+            cardData: data.cardData,
+            currentIndex: data.currentIndex,
+            viewMode: data.viewMode,
+            originalSessionSize: data.originalSessionSize,
+            completedInSession: data.completedInSession
+          },
+          stats: data.sessionStats
+        });
+      } catch (e) {
+        console.error('Error parsing localStorage:', e);
+      }
+    }
+  }
+  
+  async migrateLocalStorageIfNewer(dbUpdatedAt) {
+    const storageKey = `irregular_verbs_${this.setId}`;
+    const saved = localStorage.getItem(storageKey);
+    if (!saved) return;
+    
+    try {
+      const localData = JSON.parse(saved);
+      const localUpdated = new Date(localData.lastUpdated || 0);
+      const dbUpdated = new Date(dbUpdatedAt);
+      
+      if (localUpdated > dbUpdated) {
+        this.loadFromData({
+          card_data: {
+            cardOrder: localData.cardOrder,
+            cardData: localData.cardData,
+            currentIndex: localData.currentIndex,
+            viewMode: localData.viewMode,
+            originalSessionSize: localData.originalSessionSize,
+            completedInSession: localData.completedInSession
+          },
+          stats: localData.sessionStats
+        });
+        await this.saveProgressSilent();
+      }
+    } catch (e) {
+      console.error('Error during migration:', e);
+    }
+  }
+  
+  saveToLocalStorage() {
+    const storageKey = `irregular_verbs_${this.setId}`;
+    const data = {
+      cardOrder: this.cardOrder,
+      currentIndex: this.currentIndex,
+      viewMode: this.viewMode,
+      cardData: this.cardData,
+      sessionStats: this.sessionStats,
+      originalSessionSize: this.originalSessionSize,
+      completedInSession: this.completedInSession,
+      lastUpdated: new Date().toISOString(),
+      setTitle: this.setTitle
+    };
+    
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    } catch (e) {
+      console.error('Error saving to localStorage:', e);
+    }
+  }
+  
+  // Validation helpers
+  validateArray(arr, expectedLength) {
+    if (!Array.isArray(arr) || arr.length > expectedLength) return null;
+    return arr.every(idx => Number.isInteger(idx) && idx >= 0 && idx < expectedLength) ? arr : null;
+  }
+  
+  validateCardData(data) {
+    if (!data || typeof data !== 'object') return null;
+    const validated = {};
+    
+    for (const [key, value] of Object.entries(data)) {
+      if (value && typeof value === 'object' &&
+          typeof value.interval === 'number' &&
+          typeof value.easeFactor === 'number') {
+        validated[key] = value;
+      }
+    }
+    
+    return validated;
+  }
+}
+
+// Initialize the system
+document.addEventListener('DOMContentLoaded', () => {
+  updateAuthLink();
+  window.irregularVerbsSystem = new IrregularVerbsSystem();
+});
+
+// Auth state changes
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
+  console.log('Auth state changed:', event);
+  updateAuthLink();
+});
+
+// Throttled focus check
+window.addEventListener('focus', () => {
+  setTimeout(updateAuthLink, 1000);
+});
+</script>
+

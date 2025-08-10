@@ -1,0 +1,83 @@
+{{/*
+  Shortcode: audio
+  Description: Embeds an HTML5 audio player using Page Resources or static path,
+               with width and alignment options.
+  Parameters:
+    src (string, required): Filename of the audio file within the Page Bundle,
+                            OR path relative to static dir (e.g., "/audio/song.mp3").
+    width (string, optional): Width of the player container (e.g., "100%", "300px", "auto"). Defaults to "100%".
+    align (string, optional): Alignment of the player container ("left", "center", "right"). Defaults to "left".
+*/}}
+
+{{ $src := .Get "src" }}
+{{ $width := .Get "width" | default "100%" }}
+{{ $align := .Get "align" | default "left" }}
+
+{{ $audioResource := "" }}
+{{ $audioURL := "" }}
+
+{{/* Input validation */}}
+{{ if not $src }}
+  {{ errorf "Audio shortcode in %q requires a 'src' attribute." .Page.File.Path }}
+{{ else }}
+  {{/* Try to find as Page Resource first */}}
+  {{ $audioResource = .Page.Resources.GetMatch $src }}
+
+  {{ if $audioResource }}
+    {{/* Found as Page Resource, use its relative permalink */}}
+    {{ $audioURL = $audioResource.RelPermalink }}
+  {{ else }}
+    {{/* Not found as Page Resource, assume it's a path relative to site root (e.g., in /static) */}}
+    {{/* Check if the provided src looks like an absolute URL or starts with /, treat it differently */}}
+    {{ if or (strings.HasPrefix $src "http") (strings.HasPrefix $src "/") }}
+        {{ $audioURL = $src | absURL }}
+    {{ else }}
+        {{/* If it's just a filename, maybe warn or assume /static? For now, treat as relative to base */}}
+        {{/* This branch is less likely useful if Page Resources is the primary method */}}
+        {{/* Let's default to absURL hoping it's in /static */}}
+        {{ $audioURL = $src | absURL }}
+        {{/* Optional: Warn if not found as resource and not starting with / */}}
+        {{/* warnf "Audio shortcode in %q: src %q not found as Page Resource and doesn't start with '/'. Assuming path relative to site root (e.g., '/static/%s')." .Page.File.Path $src $src */}}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+
+{{/* Proceed only if we have a URL */}}
+{{ if $audioURL }}
+  {{/* Determine alignment class and style */}}
+  {{ $alignClass := "" }}
+  {{ $widthStyle := printf "width: %s;" $width | safeCSS }}
+  {{ $wrapperStyle := $widthStyle }}
+
+  {{ if eq $align "center" }}
+    {{ $alignClass = "audio-center" }}
+  {{ else if eq $align "right" }}
+    {{ $alignClass = "audio-right" }}
+  {{ else }}
+    {{ $alignClass = "audio-left" }} {{/* Default */}}
+  {{ end }}
+
+  <div class="audio-player-wrapper {{ $alignClass }}" style="{{ $wrapperStyle }}">
+    <audio controls style="width: 100%; display: block;"> {{/* Player fills wrapper */}}
+      {{/* Determine audio type based on extension - add more as needed */}}
+      {{ $type := "" }}
+      {{ if strings.HasSuffix $src ".mp3" }}
+        {{ $type = "audio/mpeg" }}
+      {{ else if strings.HasSuffix $src ".ogg" }}
+        {{ $type = "audio/ogg" }}
+      {{ else if strings.HasSuffix $src ".wav" }}
+        {{ $type = "audio/wav" }}
+      {{ else }}
+        {{/* Default or leave empty if type detection is unreliable */}}
+        {{ $type = "audio/mpeg" }} {{/* Fallback to mp3 type */}}
+      {{ end }}
+      <source src="{{ $audioURL }}" type="{{ $type }}">
+      Your browser does not support the HTML5 audio element.
+      <a href="{{ $audioURL }}">Download the audio file.</a>
+    </audio>
+  </div>
+{{ else if $src }}
+  {{/* Error only if src was provided but URL couldn't be determined */}}
+  {{ errorf "Audio shortcode in %q: Could not find or determine URL for src %q. Ensure it exists as a Page Resource or provide a valid path starting with '/' (relative to /static)." .Page.File.Path $src }}
+{{ end }}

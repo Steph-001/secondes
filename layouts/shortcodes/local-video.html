@@ -1,0 +1,86 @@
+{{/* layouts/shortcodes/local-video.html - Force Aspect Ratio */}}
+{{/*
+  Displays a responsive video with poster, optional alignment, forced aspect ratio,
+  and optional maximum width. Uses Page Bundles.
+
+  Parameters:
+    src (required): Filename of the video within the Page Bundle.
+    poster (required): Filename of the poster image within the Page Bundle.
+    max_width (optional): Maximum width for the video player block (e.g., "800px"). Defaults to 100%.
+    align (optional): Horizontal alignment of the video block ("center" or "left"). Defaults to "center".
+    aspect_ratio (optional): Aspect ratio as Height/Width decimal (e.g., "0.5625" for 16:9). Defaults to 16:9.
+    type (optional): MIME type of the primary src (defaults to "video/mp4").
+    src_webm (optional): Filename of WebM version.
+    src_ogg (optional): Filename of Ogg version.
+*/}}
+
+{{ $srcParam := .Get "src" }}
+{{ $posterParam := .Get "poster" }}
+{{ $align := .Get "align" | default "center" }}
+{{ $maxWidthParam := .Get "max_width" | default "100%" }}
+{{ $aspectRatio := .Get "aspect_ratio" | default "0.5625" }} {{/* 16:9 default = 9 / 16 */}}
+{{ $aspectRatioPercent := printf "%v%%" (mul (float $aspectRatio) 100.0) }}
+
+{{ $videoSrc := "" }}
+{{ $videoResource := "" }}
+{{ $posterSrc := "" }}
+{{ $posterResource := "" }}
+
+{{/* Process video source */}}
+{{ with $srcParam }}
+  {{ $videoResource = $.Page.Resources.GetMatch . }}
+{{ end }}
+{{ if $videoResource }}
+  {{ $videoSrc = $videoResource.RelPermalink }}
+{{ else if $srcParam }}
+  {{ warnf "local-video shortcode: Could not find video '%s' in Page Resources for '%s'. Falling back to relURL." $srcParam $.Page.File.Path }}
+  {{ $videoSrc = $srcParam | relURL }}
+{{ end }}
+
+{{/* Process poster source */}}
+{{ with $posterParam }}
+  {{ $posterResource = $.Page.Resources.GetMatch . }}
+{{ end }}
+{{ if $posterResource }}
+  {{ $posterSrc = $posterResource.RelPermalink }}
+{{ else if $posterParam }}
+  {{ warnf "local-video shortcode: Could not find poster '%s' in Page Resources for '%s'. Falling back to relURL." $posterParam $.Page.File.Path }}
+  {{ $posterSrc = $posterParam | relURL }}
+{{ end }}
+
+
+{{ if $videoSrc }} {{/* Only render if we have a video source */}}
+  {{/* --- Outer Wrapper: Controls max-width and alignment --- */}}
+  {{ $outerClasses := "video-aspect-wrapper mb-3" }}
+  {{ if eq $align "center" }}
+    {{ $outerClasses = printf "%s %s" $outerClasses "mx-auto" }}
+  {{ end }}
+
+  <div class="{{ $outerClasses }}" style="max-width: {{ $maxWidthParam }};">
+    {{/* --- Inner Container: Enforces aspect ratio --- */}}
+    {{/* Added rounded corners and black background for better appearance */}}
+    <div class="video-aspect-ratio-container" style="position: relative; height: 0; padding-bottom: {{ $aspectRatioPercent }}; overflow: hidden; border-radius: var(--bs-border-radius, 0.375rem); background-color: #000;">
+      {{/* --- Video Element: Positioned absolutely --- */}}
+      <video controls {{ with $posterSrc }}poster="{{ . }}"{{ end }}
+             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; object-fit: contain;" {{/* Removed conflicting classes/styles, added object-fit */}}
+             preload="metadata" {{/* Good practice with poster */}}
+        >
+        <source src="{{ $videoSrc }}" type="{{ .Get "type" | default "video/mp4" }}">
+        {{ with .Get "src_webm" }}
+          {{ $webmRes := $.Page.Resources.GetMatch . }}
+          {{ if $webmRes }} <source src="{{ $webmRes.RelPermalink }}" type="video/webm"> {{ else }} <source src="{{ . | relURL }}" type="video/webm"> {{ warnf "local-video: Could not find webm '%s' in Resources." . }} {{ end }}
+        {{ end }}
+         {{ with .Get "src_ogg" }}
+          {{ $oggRes := $.Page.Resources.GetMatch . }}
+           {{ if $oggRes }} <source src="{{ $oggRes.RelPermalink }}" type="video/ogg"> {{ else }} <source src="{{ . | relURL }}" type="video/ogg"> {{ warnf "local-video: Could not find ogg '%s' in Resources." . }} {{ end }}
+        {{ end }}
+        Your browser does not support the video tag.
+      </video>
+    </div> {{/* End aspect-ratio-container */}}
+  </div> {{/* End video-aspect-wrapper */}}
+
+{{ else }}
+  <div class="alert alert-danger" role="alert">
+    local-video Shortcode Error: Could not determine video source for '{{ $srcParam | default "(not provided)" }}'.
+  </div>
+{{ end }}
