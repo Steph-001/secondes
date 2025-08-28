@@ -19904,4 +19904,8 @@ div.drawioframe {
   width: 100%;
   border-radius: 0; }
 
+@media (max-width: 768px) {
+  .td-heading-self-link {
+    display: none !important; } }
+
 /*# sourceMappingURL=main.css.map */

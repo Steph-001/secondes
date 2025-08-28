@@ -5,8 +5,28 @@ date: "2025-08-10T08:42:35+02:00"
 draft: false
 weight: 1
 lexicon:
+  - term: "success"
+    definition: "réussir"
+    stressed: "succ*ess"
+  - term: "skateboarding"
+    definition: "faire du skateboard"
+    stressed: "sk*ateboarding"
+  - term: "succeed"
+    definition: "réussir"
+    stressed: "succ*e*ed"
+  - term: "imagine"
+    definition: "imaginer"
+    stressed: "im*agine"
+  - term: "fall"
+    definition: "tomber"
+    stressed: "fall"
+  - term: "culture"
+    definition: "culture"
+    stressed: "c*ulture"
+  - term: "trick"
+    definition: "figure"
+    stressed: "trick"
 ---
-
 ## A - No Pain no Gain
 
 {{< fullscreen-image src="skater.png" max_width="80%" align="right" >}}

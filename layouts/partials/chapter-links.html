@@ -1,0 +1,12 @@
+{{ $lex := .Resources.GetMatch "lexicon.md" }}
+{{ if $lex }}
+  <hr>
+  <p><a href="{{ $lex.RelPermalink }}">Go to Lexicon</a></p>
+{{ end }}
+
+{{ $flash := .Resources.GetMatch "flashcards.md" }}
+{{ if $flash }}
+  <hr>
+  <p><a href="{{ $flash.RelPermalink }}">Go to Flashcards</a></p>
+{{ end }}
+
