@@ -2,7 +2,7 @@
 title: "Cowboys"
 linkTitle: "Cowboys"
 date: "2025-07-29T20:20:24+02:00"
-draft: false
+draft: true
 weight: 1
 lexicon:
 ---

@@ -47,7 +47,8 @@
 {{ if $audioURL }}
   {{/* Determine alignment class and style */}}
   {{ $alignClass := "" }}
-  {{ $widthStyle := printf "width: %s;" $width | safeCSS }}
+  {{ $widthStyle := printf "max-width: %s; width: 100%%;" $width | safeCSS }}
+  {{ $rounded := .Get "rounded" | default "false" }}
   {{ $wrapperStyle := $widthStyle }}
 
   {{ if eq $align "center" }}
@@ -58,7 +59,7 @@
     {{ $alignClass = "audio-left" }} {{/* Default */}}
   {{ end }}
 
-  <div class="audio-player-wrapper {{ $alignClass }}" style="{{ $wrapperStyle }}">
+  <div class="audio-player-wrapper {{ $alignClass }} {{ if eq $rounded "true" }}audio-rounded{{ end }}" style="{{ $wrapperStyle }}">
     <audio controls style="width: 100%; display: block;"> {{/* Player fills wrapper */}}
       {{/* Determine audio type based on extension - add more as needed */}}
       {{ $type := "" }}
@@ -81,3 +82,4 @@
   {{/* Error only if src was provided but URL couldn't be determined */}}
   {{ errorf "Audio shortcode in %q: Could not find or determine URL for src %q. Ensure it exists as a Page Resource or provide a valid path starting with '/' (relative to /static)." .Page.File.Path $src }}
 {{ end }}
+
